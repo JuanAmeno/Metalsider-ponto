@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ponto em Nuvem - Módulo de Registro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Desabilita o zoom de duplo toque no celular para melhorar o feedback do botão */
+        button { touch-action: manipulation; }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-200 antialiased font-sans flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden min-h-[580px] flex flex-col justify-between p-6">
+        
+        <header class="border-b border-zinc-800 pb-4 mb-6">
+            <div class="flex items-center justify-between text-xs tracking-wider text-zinc-500 font-mono uppercase">
+                <span>Sistema de Ponto Eletrônico</span>
+                <span id="live-date">--/--/----</span>
+            </div>
+        </header>
+
+        <main class="flex-1 flex flex-col justify-center">
+            
+            <div id="screen-ready" class="block space-y-6">
+                <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-center">
+                    <p class="text-xs text-zinc-500 font-mono tracking-wide uppercase">Colaborador</p>
+                    <h2 class="text-xl font-semibold text-zinc-100 tracking-wide mt-1">EXEMPLO</h2>
+                    <p class="text-xs font-mono text-zinc-400 mt-0.5">RE: 1024-5</p>
+                </div>
+
+                <div class="text-center py-6">
+                    <div id="live-clock" class="text-4xl font-light tracking-normal text-zinc-100 font-mono">00:00:00</div>
+                    <p class="text-xs text-zinc-500 uppercase tracking-widest mt-2">Horário Oficial de Brasília</p>
+                </div>
+
+                <div class="border border-zinc-800 rounded-lg p-5 bg-zinc-950/50 flex flex-col items-center justify-center space-y-4">
+                    <div id="status-indicator" class="text-xs font-mono text-zinc-400 uppercase tracking-widest text-center min-h-[20px]">
+                        AGUARDANDO LEITURA BIOMÉTRICA
+                    </div>
+                    
+                    <button id="btn-trigger" onclick="processarBiometria()" class="w-full py-3.5 px-4 bg-zinc-800 hover:bg-zinc-750 active:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-md font-medium text-sm tracking-wide uppercase transition-colors duration-150 focus:outline-none focus:ring-1 focus:ring-zinc-500">
+                        Simular Batida de Ponto
+                    </button>
+                </div>
+            </div>
+
+            <div id="screen-success" class="hidden space-y-6">
+                <div class="bg-emerald-950/30 border border-emerald-900/50 rounded-lg p-6 text-center space-y-3">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-emerald-900/40 border border-emerald-800">
+                        <svg class="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-emerald-400 font-medium tracking-wide uppercase text-sm">Registro Efetuado</h3>
+                        <p class="text-xs text-zinc-400 mt-1">Comprovante gerado com sucesso na nuvem.</p>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 font-mono text-xs text-zinc-400 space-y-2">
+                    <div class="flex justify-between"><span class="text-zinc-500">REPI:</span> <span>290526-001</span></div>
+                    <div class="flex justify-between"><span class="text-zinc-500">DATA:</span> <span id="receipt-date">--/--/----</span></div>
+                    <div class="flex justify-between"><span class="text-zinc-500">HORA:</span> <span id="receipt-time">--:--:--</span></div>
+                    <div class="flex justify-between border-t border-zinc-800 pt-2 mt-2"><span class="text-zinc-500">STATUS:</span> <span class="text-emerald-500">AUTENTICADO</span></div>
+                </div>
+
+                <button onclick="resetarPainel()" class="w-full py-2 px-4 bg-transparent hover:bg-zinc-900 text-zinc-500 hover:text-zinc-300 font-mono text-xs tracking-wider uppercase transition-colors duration-150">
+                    Voltar para o Início
+                </button>
+            </div>
+
+        </main>
+
+        <footer class="border-t border-zinc-800 pt-4 mt-6 text-center">
+            <p class="text-[10px] font-mono text-zinc-600 tracking-wider uppercase">Criptografia Ponta a Ponta ATIVA</p>
+        </footer>
+    </div>
+
+    <script>
+        // Atualização contínua do relógio em tempo real
+        function atualizarRelogio() {
+            const agora = new Date();
+            
+            // Formatador de data
+            const opcoesData = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            const dataFormatada = agora.toLocaleDateString('pt-BR', opcoesData);
+            
+            // Formatador de hora
+            const horaFormatada = agora.toTimeString().split(' ')[0];
+
+            document.getElementById('live-clock').textContent = horaFormatada;
+            document.getElementById('live-date').textContent = dataFormatada;
+        }
+        setInterval(atualizarRelogio, 1000);
+        atualizarRelogio(); // Chamada imediata inicial
+
+        // Lógica de simulação com o delay exigido
+        function processarBiometria() {
+            const statusIndicator = document.getElementById('status-indicator');
+            const btnTrigger = document.getElementById('btn-trigger');
+
+            // 1. Inicia o estado de transição/leitura do hardware
+            statusIndicator.textContent = 'LENDO DIGITAL / PROCESSANDO...';
+            statusIndicator.classList.remove('text-zinc-400');
+            statusIndicator.classList.add('text-zinc-300', 'font-bold');
+            
+            // Desabilita o botão temporariamente para evitar cliques duplos durante o processamento
+            btnTrigger.disabled = true;
+            btnTrigger.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // 2. Trava a tela por exatos 1.2 segundos (1200 milissegundos)
+            setTimeout(() => {
+                const agora = new Date();
+                const horaFinal = agora.toTimeString().split(' ')[0];
+                const dataFinal = agora.toLocaleDateString('pt-BR');
+
+                // Injeta os dados estáticos do momento exato do registro no recibo da Tela 2
+                document.getElementById('receipt-time').textContent = horaFinal;
+                document.getElementById('receipt-date').textContent = dataFinal;
+
+                // 3. Alterna a exibição das telas
+                document.getElementById('screen-ready').classList.replace('block', 'hidden');
+                document.getElementById('screen-success').classList.replace('hidden', 'block');
+            }, 1200);
+        }
+
+        // Reseta o protótipo para o estado inicial
+        function resetarPainel() {
+            const statusIndicator = document.getElementById('status-indicator');
+            const btnTrigger = document.getElementById('btn-trigger');
+
+            // Restaura o indicador
+            statusIndicator.textContent = 'AGUARDANDO LEITURA BIOMÉTRICA';
+            statusIndicator.classList.remove('text-zinc-300', 'font-bold');
+            statusIndicator.classList.add('text-zinc-400');
+
+            // Restaura o botão
+            btnTrigger.disabled = false;
+            btnTrigger.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            // Alterna a visualização de volta para a Tela 1
+            document.getElementById('screen-success').classList.replace('block', 'hidden');
+            document.getElementById('screen-ready').classList.replace('hidden', 'block');
+        }
+    </script>
+</body>
+</html>
